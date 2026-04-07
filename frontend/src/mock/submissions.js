@@ -1,0 +1,6 @@
+export const mockSubmissions = [
+  { id: 1, task_id: 1, task_title: "Sum of Numbers Using Loop", submitted_at: "2025-03-30T10:15:00Z", test_result: true,  ast_result: true,  hints_used: 0, time_spent: 180, difficulty_at_submission: "easy",   feedback_text: "All test cases passed. For loop detected correctly." },
+  { id: 2, task_id: 2, task_title: "Count Even Numbers",        submitted_at: "2025-03-31T14:22:00Z", test_result: false, ast_result: true,  hints_used: 1, time_spent: 240, difficulty_at_submission: "medium", feedback_text: "Test case 2 failed. Check your loop logic for empty lists." },
+  { id: 3, task_id: 2, task_title: "Count Even Numbers",        submitted_at: "2025-03-31T14:35:00Z", test_result: true,  ast_result: false, hints_used: 1, time_spent: 80,  difficulty_at_submission: "medium", feedback_text: "Output correct, but required construct 'for_loop' not found. Did you use a for loop?" },
+  { id: 4, task_id: 1, task_title: "Sum of Numbers Using Loop", submitted_at: "2025-04-01T09:00:00Z", test_result: true,  ast_result: true,  hints_used: 2, time_spent: 310, difficulty_at_submission: "easy",   feedback_text: "All test cases passed. Well done!" },
+];
