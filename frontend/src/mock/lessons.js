@@ -6,7 +6,7 @@ export const mockLessons = [
   { id: 5, module_id: 2, title: "Elif and Else", order: 2, is_completed: true },
   { id: 6, module_id: 2, title: "Nested Conditions", order: 3, is_completed: false },
   { id: 7, module_id: 3, title: "For Loops", order: 1, is_completed: true },
-  { id: 8, module_id: 3, title: "While Loops", order: 2, is_completed: false },
+  { id: 8, module_id: 3, title: "While Loops", order: 2, is_completed: true },
   { id: 9, module_id: 3, title: "Loop Control: break & continue", order: 3, is_completed: false },
   { id: 10, module_id: 4, title: "Defining Functions", order: 1, is_completed: false },
   { id: 11, module_id: 4, title: "Parameters and Arguments", order: 2, is_completed: false },
@@ -19,6 +19,8 @@ export const mockLessons = [
   { id: 18, module_id: 6, title: "Recursion Concepts", order: 1, is_completed: false },
   { id: 19, module_id: 6, title: "Base Cases and Recursion", order: 2, is_completed: false },
   { id: 20, module_id: 6, title: "Advanced Recursion", order: 3, is_completed: false },
+  { id: 21, module_id: 3, title: "Nested Loops", order: 4, is_completed: false },
+  { id: 22, module_id: 3, title: "Looping Through Strings", order: 5, is_completed: false },
 ];
 
 export const mockLessonContent = {
@@ -43,6 +45,47 @@ for fruit in fruits:
       <p>The <code>range()</code> function generates a sequence of numbers.</p>
     `,
     task_id: 1,
+  },
+  8: {
+    id: 8,
+    title: "While Loops",
+    content_html: `
+      <h2>Introduction to While Loops</h2>
+      <p>A <strong>while loop</strong> keeps running as long as its condition stays true.</p>
+      <h3>Basic Syntax</h3>
+      <pre><code>while condition:
+    # repeat this block</code></pre>
+      <h3>Example</h3>
+      <pre><code>count = 3
+while count > 0:
+    print(count)
+    count -= 1</code></pre>
+      <p>Use a while loop when you do not know the exact number of repetitions in advance.</p>
+      <h3>Important Tip</h3>
+      <p>Always make sure something inside the loop changes, otherwise you can create an infinite loop.</p>
+    `,
+    task_id: 4,
+  },
+  9: {
+    id: 9,
+    title: "Loop Control: break & continue",
+    content_html: `
+      <h2>Controlling Loop Flow</h2>
+      <p>The keywords <code>break</code> and <code>continue</code> help you control what happens inside a loop.</p>
+      <h3>break</h3>
+      <p><code>break</code> stops the loop immediately.</p>
+      <pre><code>for item in numbers:
+    if item == 0:
+        break</code></pre>
+      <h3>continue</h3>
+      <p><code>continue</code> skips the current iteration and moves to the next one.</p>
+      <pre><code>for item in numbers:
+    if item < 0:
+        continue
+    print(item)</code></pre>
+      <p>These tools are useful when only part of the data should be processed.</p>
+    `,
+    task_id: 7,
   },
   10: {
     id: 10,
@@ -110,8 +153,42 @@ fruits.remove("banana")  # Remove specific item</code></pre>
 
 print(factorial(5))  # Output: 120</code></pre>
       <h3>How It Works</h3>
-      <p>factorial(5) → 5 * factorial(4) → 5 * 4 * 3 * 2 * 1 → 120</p>
+      <p>factorial(5) -> 5 * factorial(4) -> 5 * 4 * 3 * 2 * 1 -> 120</p>
     `,
     task_id: undefined,
-  }
+  },
+  21: {
+    id: 21,
+    title: "Nested Loops",
+    content_html: `
+      <h2>Nested Loops</h2>
+      <p>A <strong>nested loop</strong> is a loop inside another loop. It is useful for working with grids, tables and combinations.</p>
+      <h3>Example</h3>
+      <pre><code>for row in range(3):
+    for col in range(2):
+        print(row, col)</code></pre>
+      <p>The inner loop completes all of its iterations for every single outer loop iteration.</p>
+      <h3>When to Use</h3>
+      <ul>
+        <li>Drawing patterns</li>
+        <li>Traversing 2D data</li>
+        <li>Comparing every item against another group</li>
+      </ul>
+    `,
+    task_id: 9,
+  },
+  22: {
+    id: 22,
+    title: "Looping Through Strings",
+    content_html: `
+      <h2>Looping Through Strings</h2>
+      <p>Strings are sequences, which means you can iterate through them one character at a time.</p>
+      <h3>Example</h3>
+      <pre><code>word = "python"
+for letter in word:
+    print(letter)</code></pre>
+      <p>This is helpful for counting characters, validating text and building custom parsing logic.</p>
+    `,
+    task_id: 11,
+  },
 };

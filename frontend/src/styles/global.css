@@ -1,23 +1,23 @@
 :root {
-  --bg-primary:     #0d1117;   /* dark navy — main background */
-  --bg-secondary:   #161b22;   /* slightly lighter — cards, panels */
-  --bg-tertiary:    #21262d;   /* borders, inputs, hover states */
-  --accent-blue:    #58a6ff;   /* primary CTA, links, active states */
-  --accent-green:   #3fb950;   /* success, correct answers, completed */
-  --accent-orange:  #f0883e;   /* warnings, hints, medium difficulty */
-  --accent-red:     #f85149;   /* errors, failures, hard difficulty */
-  --accent-purple:  #bc8cff;   /* adaptive engine indicators */
-  --text-primary:   #e6edf3;   /* main text */
-  --text-secondary: #8b949e;   /* subtitles, placeholders */
-  --text-muted:     #484f58;   /* disabled, very subtle */
-  --border-color:   #30363d;   /* card borders */
-  --radius-sm:      6px;
-  --radius-md:      12px;
-  --radius-lg:      20px;
-  --shadow-card:    0 4px 24px rgba(0,0,0,0.4);
-  --font-heading:   'Space Grotesk', sans-serif;
-  --font-body:      'Inter', sans-serif;
-  --font-code:      'Fira Code', monospace;
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-tertiary: #21262d;
+  --accent-blue: #58a6ff;
+  --accent-green: #3fb950;
+  --accent-orange: #f0883e;
+  --accent-red: #f85149;
+  --accent-purple: #bc8cff;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #484f58;
+  --border-color: #30363d;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --font-heading: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-code: 'Fira Code', monospace;
 }
 
 * {
@@ -27,21 +27,37 @@
 }
 
 body {
+  margin: 0;
   font-family: var(--font-body);
   background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(circle at top left, rgba(88, 166, 255, 0.08), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(63, 185, 80, 0.08), transparent 24%);
   color: var(--text-primary);
   line-height: 1.6;
 }
 
-h1, h2, h3, h4, h5, h6 {
+#root {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-heading);
 }
 
-code, pre {
+code,
+pre {
   font-family: var(--font-code);
 }
 
-button, input, textarea {
+button,
+input,
+textarea {
   font-family: inherit;
 }
 
@@ -50,7 +66,8 @@ button {
   transition: all 0.2s ease;
 }
 
-input, textarea {
+input,
+textarea {
   background-color: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-sm);
@@ -58,12 +75,12 @@ input, textarea {
   padding: 8px 12px;
 }
 
-input:focus, textarea:focus {
+input:focus,
+textarea:focus {
   outline: none;
   border-color: var(--accent-blue);
 }
 
-/* Scrollbars */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -81,32 +98,51 @@ input:focus, textarea:focus {
   background: var(--text-secondary);
 }
 
-/* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideInUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
-/* Responsive */
 @media (max-width: 1024px) {
-  .fade-in, .slide-in {
+  .fade-in,
+  .slide-in {
     animation: none;
   }
-  
+
   nav {
     padding: 0 10px;
   }
-  
+
   main {
     padding-top: 70px;
   }

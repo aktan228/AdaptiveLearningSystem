@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { mockTasks } from '../mock/tasks';
 import { mockHints } from '../mock/hints';
+import { mockLessons } from '../mock/lessons';
+import { mockModules } from '../mock/modules';
 import CodeEditor from '../components/CodeEditor';
 import HintPanel from '../components/HintPanel';
 import FeedbackPanel from '../components/FeedbackPanel';
@@ -12,8 +14,10 @@ export default function TaskPage() {
   const navigate = useNavigate();
   const taskId = parseInt(id);
 
-  const task = mockTasks.find(t => t.id === taskId);
+  const task = mockTasks.find((item) => item.id === taskId);
   const hints = mockHints[taskId] || [];
+  const lesson = task ? mockLessons.find((item) => item.id === task.lesson_id) : null;
+  const module = lesson ? mockModules.find((item) => item.id === lesson.module_id) : null;
 
   const [code, setCode] = useState(task?.starter_code || '');
   const [feedback, setFeedback] = useState(null);
@@ -23,39 +27,64 @@ export default function TaskPage() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTimeSpent(prev => prev + 1);
+      setTimeSpent((prev) => prev + 1);
     }, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    setCode(task?.starter_code || '');
+    setFeedback(null);
+    setTimeSpent(0);
+    setHintsUsed(0);
+  }, [taskId, task]);
 
   if (!task) {
     return <div>Task not found</div>;
   }
 
   const handleRunCode = () => {
-    // Mock run - just show a message
     alert('Code execution not implemented in mock. Use Submit to test.');
   };
 
   const handleSubmit = () => {
     setIsLoading(true);
     setTimeout(() => {
-      // Mock evaluation: check if code contains "for" and "return"
-      const passed = code.includes("for") && code.includes("return");
+      const codeLower = code.toLowerCase();
+      const loopCount =
+        (codeLower.match(/\bfor\b/g) || []).length +
+        (codeLower.match(/\bwhile\b/g) || []).length;
+
+      let astResult = task.tags.includes('while-loop')
+        ? codeLower.includes('while')
+        : codeLower.includes('for');
+
+      if (task.tags.includes('nested-loops')) {
+        astResult = loopCount >= 2;
+      }
+
+      if (task.tags.includes('continue')) {
+        astResult = astResult && codeLower.includes('continue');
+      }
+
+      if (task.tags.includes('break')) {
+        astResult = astResult && codeLower.includes('break');
+      }
+
+      const testResult = codeLower.includes('return');
       setFeedback({
-        test_result: passed,
-        ast_result: code.includes("for"),
-        feedback_text: passed
-          ? "✓ All test cases passed. For loop detected correctly."
-          : "✗ Test case failed or required construct missing.",
+        test_result: testResult,
+        ast_result: astResult,
+        feedback_text: testResult && astResult
+          ? "All test cases passed. Required loop structure detected."
+          : "A test failed or the required loop structure is missing.",
       });
       setIsLoading(false);
     }, 1500);
   };
 
   const handleNextTask = () => {
-    // Mock next task
-    navigate('/modules');
+    navigate(`/lesson/${task.lesson_id}`);
   };
 
   const formatTime = (seconds) => {
@@ -65,16 +94,14 @@ export default function TaskPage() {
   };
 
   const renderDescription = (desc) => {
-    const lines = desc.split('\n').filter(line => line.trim());
-    
+    const lines = desc.split('\n').filter((line) => line.trim());
+
     return lines.map((line, idx) => {
-      // Split line by backticks and asterisks while preserving them
       const parts = [];
       let i = 0;
       let currentPart = '';
-      
+
       while (i < line.length) {
-        // Handle bold text **text**
         if (line.substring(i, i + 2) === '**') {
           if (currentPart) {
             parts.push({ type: 'text', content: currentPart });
@@ -87,7 +114,6 @@ export default function TaskPage() {
             continue;
           }
         }
-        // Handle code `text`
         if (line[i] === '`') {
           if (currentPart) {
             parts.push({ type: 'text', content: currentPart });
@@ -101,19 +127,20 @@ export default function TaskPage() {
           }
         }
         currentPart += line[i];
-        i++;
+        i += 1;
       }
-      
+
       if (currentPart) {
         parts.push({ type: 'text', content: currentPart });
       }
-      
+
       return (
         <div key={idx} style={{ marginBottom: '12px', lineHeight: '1.6' }}>
           {parts.map((part, pidx) => {
             if (part.type === 'bold') {
               return <strong key={pidx}>{part.content}</strong>;
-            } else if (part.type === 'code') {
+            }
+            if (part.type === 'code') {
               return (
                 <code
                   key={pidx}
@@ -128,9 +155,8 @@ export default function TaskPage() {
                   {part.content}
                 </code>
               );
-            } else {
-              return part.content;
             }
+            return part.content;
           })}
         </div>
       );
@@ -149,14 +175,37 @@ export default function TaskPage() {
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: '20px',
+        gap: '12px',
+        flexWrap: 'wrap',
       }}>
-        <h1 style={{
-          color: 'var(--text-primary)',
-          fontSize: '24px',
-          margin: 0,
-        }}>
-          {task.title}
-        </h1>
+        <div>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '6px' }}>
+            <span style={{ color: 'var(--accent-blue)', cursor: 'pointer' }} onClick={() => navigate('/modules')}>
+              Modules
+            </span>
+            {' > '}
+            {module && (
+              <>
+                <span style={{ color: 'var(--accent-blue)', cursor: 'pointer' }} onClick={() => navigate(`/module/${module.id}`)}>
+                  {module.title}
+                </span>
+                {' > '}
+              </>
+            )}
+            {lesson && (
+              <span style={{ color: 'var(--accent-blue)', cursor: 'pointer' }} onClick={() => navigate(`/lesson/${lesson.id}`)}>
+                {lesson.title}
+              </span>
+            )}
+          </div>
+          <h1 style={{
+            color: 'var(--text-primary)',
+            fontSize: '24px',
+            margin: 0,
+          }}>
+            {task.title}
+          </h1>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <DifficultyBadge level={task.difficulty_level} />
           <span style={{
@@ -169,14 +218,19 @@ export default function TaskPage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '20px', height: 'calc(100vh - 200px)' }}>
-        {/* Left Panel */}
+      <div style={{
+        display: 'flex',
+        gap: '20px',
+        alignItems: 'stretch',
+        flexWrap: 'wrap',
+      }}>
         <div style={{
-          flex: '0 0 40%',
+          flex: '1 1 360px',
           backgroundColor: 'var(--bg-secondary)',
           borderRadius: 'var(--radius-md)',
           padding: '20px',
           overflowY: 'auto',
+          minHeight: '560px',
         }}>
           <div style={{ marginBottom: '20px' }}>
             <h2 style={{
@@ -221,16 +275,33 @@ export default function TaskPage() {
             </div>
           </div>
 
-          <HintPanel hints={hints} onHintUsed={() => setHintsUsed(prev => prev + 1)} />
+          <div style={{
+            backgroundColor: 'var(--bg-primary)',
+            border: '1px solid var(--border-color)',
+            borderRadius: 'var(--radius-md)',
+            padding: '14px',
+            marginBottom: '18px',
+          }}>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '6px' }}>
+              Session stats
+            </div>
+            <div style={{ color: 'var(--text-primary)' }}>
+              Time spent: {formatTime(timeSpent)}
+            </div>
+            <div style={{ color: 'var(--text-primary)' }}>
+              Hints used: {hintsUsed}
+            </div>
+          </div>
+
+          <HintPanel key={taskId} hints={hints} onHintUsed={() => setHintsUsed((prev) => prev + 1)} />
         </div>
 
-        {/* Right Panel */}
-        <div style={{ flex: '0 0 60%', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: '1 1 520px', display: 'flex', flexDirection: 'column' }}>
           <div style={{ marginBottom: '15px' }}>
             <CodeEditor
               value={code}
               onChange={setCode}
-              height="400px"
+              height="420px"
             />
           </div>
 
@@ -281,7 +352,7 @@ export default function TaskPage() {
               textAlign: 'center',
               animation: 'fadeIn 0.3s ease forwards',
             }}>
-              🎉 Task completed! 
+              Task completed.
               <button
                 onClick={handleNextTask}
                 style={{
@@ -294,7 +365,7 @@ export default function TaskPage() {
                   cursor: 'pointer',
                 }}
               >
-                Next Task
+                Back to Lesson
               </button>
             </div>
           )}

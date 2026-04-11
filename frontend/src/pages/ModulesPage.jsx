@@ -29,7 +29,7 @@ export default function ModulesPage() {
           color: 'var(--text-secondary)',
           fontSize: '18px',
         }}>
-          Master Python through structured learning paths
+          Pick a module, then choose the exact lesson and difficulty you want to practice.
         </p>
       </div>
 
