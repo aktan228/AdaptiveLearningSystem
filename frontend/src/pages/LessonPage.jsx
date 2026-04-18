@@ -4,6 +4,7 @@ import { mockLessons, mockLessonContent } from '../mock/lessons';
 import { mockModules } from '../mock/modules';
 import { mockTasks } from '../mock/tasks';
 import DifficultyBadge from '../components/DifficultyBadge';
+import { useAuth } from '../context/AuthContext';
 
 const difficultyConfig = {
   easy: {
@@ -45,6 +46,7 @@ function getFallbackContent(lesson) {
 export default function LessonPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const lessonId = parseInt(id);
 
   const lesson = mockLessons.find((item) => item.id === lessonId);
@@ -155,6 +157,19 @@ export default function LessonPage() {
           )}
         </div>
 
+        {!user && (
+          <div style={{
+            marginBottom: '16px',
+            backgroundColor: 'rgba(240, 136, 62, 0.12)',
+            border: '1px solid rgba(240, 136, 62, 0.28)',
+            borderRadius: 'var(--radius-md)',
+            padding: '12px 14px',
+            color: 'var(--text-primary)',
+          }}>
+            Guests can read lessons, but practice and progress tracking open after login or registration.
+          </div>
+        )}
+
         {lessonTasks.length > 0 ? (
           <>
             <div style={{
@@ -241,7 +256,7 @@ export default function LessonPage() {
 
       <div style={{ display: 'flex', gap: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
         <button
-          onClick={handleStartTask}
+          onClick={() => (user ? handleStartTask() : navigate('/login'))}
           disabled={!selectedTask}
           style={{
             padding: '12px 24px',
@@ -254,7 +269,7 @@ export default function LessonPage() {
             cursor: selectedTask ? 'pointer' : 'not-allowed',
           }}
         >
-          Start Practice
+          {user ? 'Start Practice' : 'Login to Practice'}
         </button>
         <button
           onClick={handleMarkComplete}

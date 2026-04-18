@@ -16,25 +16,26 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route element={<ProtectedRoute />}>
-            <Route
-              element={
-                <>
-                  <Navbar />
-                  <main style={{ paddingTop: "88px", paddingBottom: "24px" }}>
-                    <Outlet />
-                  </main>
-                </>
-              }
-            >
-              <Route path="/" element={<Navigate to="/modules" />} />
-              <Route path="/modules" element={<ModulesPage />} />
-              <Route path="/module/:id" element={<ModuleDetailPage />} />
-              <Route path="/lesson/:id" element={<LessonPage />} />
+          <Route
+            element={
+              <>
+                <Navbar />
+                <main style={{ paddingTop: "96px", paddingBottom: "24px" }}>
+                  <Outlet />
+                </main>
+              </>
+            }
+          >
+            <Route path="/" element={<Navigate to="/modules" />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/modules" element={<ModulesPage />} />
+            <Route path="/module/:id" element={<ModuleDetailPage />} />
+            <Route path="/lesson/:id" element={<LessonPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+
+            <Route element={<ProtectedRoute />}>
               <Route path="/task/:id" element={<TaskPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/profile" element={<ProfilePage />} />
             </Route>
           </Route>

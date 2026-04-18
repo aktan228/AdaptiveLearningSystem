@@ -2,7 +2,7 @@ import { useAuth } from '../context/AuthContext';
 import { mockSubmissions } from '../mock/submissions';
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   if (!user) {
     return <div>Profile not available</div>;
@@ -63,7 +63,7 @@ export default function ProfilePage() {
             {user.bio}
           </p>
 
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
             {user.focus_topics.map((topic) => (
               <span
                 key={topic}
@@ -78,6 +78,18 @@ export default function ProfilePage() {
                 {topic}
               </span>
             ))}
+            <button
+              onClick={logout}
+              style={{
+                backgroundColor: 'transparent',
+                color: 'var(--text-secondary)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 'var(--radius-md)',
+                padding: '8px 12px',
+              }}
+            >
+              Logout
+            </button>
           </div>
         </div>
 
