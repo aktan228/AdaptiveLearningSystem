@@ -3,7 +3,7 @@ from apps.courses.models import Task
 from django.conf import settings
 
 class TestCase(models.Model):
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='test_case')
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='test_cases')
     input_data = models.TextField()
     expected_output  = models.TextField()
     is_hidden  = models.BooleanField(default=False)
@@ -12,7 +12,7 @@ class TestCase(models.Model):
         return f'TestCase for task {self.task.id}'
     
 class ASTRule(models.Model):
-    task = models.ForeignKey(Task,on_delete=models.CASCADE,related_name='ast_rule')
+    task = models.ForeignKey(Task,on_delete=models.CASCADE,related_name='ast_rules')
 
     required_construct = models.CharField(max_length=100)
     description = models.TextField(blank=True)
@@ -29,11 +29,11 @@ class Submission(models.Model):
 
     code = models.TextField()
     test_result = models.BooleanField(null=True)
-    ast_restult = models.BooleanField(null=True)
+    ast_result = models.BooleanField(null=True)
     hints_used = models.IntegerField(default=0)
     time_spent = models.IntegerField(default=0)
     submitted_at = models.DateTimeField(auto_now_add=True)
-    feedback_text = models.TextField()
+    feedback_text = models.TextField(blank=True)
     difficulty_at_submission = models.CharField(max_length=10,blank=True)
 
     def __str__(self):

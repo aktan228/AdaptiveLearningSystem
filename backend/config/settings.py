@@ -1,5 +1,6 @@
 from pathlib import Path
 from decouple import config
+from datetime import timedelta
 
 
 def env_flag(name: str, default: bool) -> bool: # ищет .env и возвращает значение переменной окружения, преобразованное в булев тип. Если переменная не найдена, используется значение по умолчанию.
@@ -25,13 +26,14 @@ INSTALLED_APPS = [
     'corsheaders', # нужен для CORS: чтобы браузер разрешал фронтенду с другого домена или порта обращаться к моему
     'django_summernote',  
     #our apps 
-    'apps.users',
+    'apps.users.apps.UsersConfig',
     'apps.courses',
     'apps.evaluation',
     'apps.hint',
     'apps.progress',
 
 ]
+AUTH_USER_MODEL = 'users.User'
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',   # React frontend
 ]
@@ -109,6 +111,11 @@ REST_FRAMEWORK = { # это словарь настроек для Django REST F
     ),
 }
 
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'

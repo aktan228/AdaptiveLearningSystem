@@ -16,7 +16,7 @@ class Lesson(models.Model):
     module = models.ForeignKey(Module, related_name='lessons', on_delete=models.CASCADE)
 
     title = models.CharField(max_length=100)
-    content_html = SummernoteTextField #rich text via Summernote
+    content_html = SummernoteTextField() #rich text via Summernote
     order = models.PositiveIntegerField(default=0)
 
     class Meta:
@@ -33,7 +33,7 @@ class Task(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     difficulty_level = models.CharField(max_length=10,choices=DIFFICULTY,default='easy')
-    time_limit = models.IntegerField(default=10)
+    time_limit = models.PositiveIntegerField(default=10)
     tags = models.JSONField(default=list)
 
     def __str__(self):

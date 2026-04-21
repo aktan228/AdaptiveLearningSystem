@@ -3,11 +3,11 @@ from django.conf import settings
 from apps.courses.models import Lesson
 
 class UserLessonProgress(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,related_name='lesson progress')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,related_name='lesson_progress')
     lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
     is_completed = models.BooleanField(default=False)
     started_at = models.DateTimeField(auto_now_add=True)
-    completed_at = models.DateField(null=True,blank=True)
+    completed_at = models.DateTimeField(null=True,blank=True)
 
     class Meta:
         unique_together = ('user','lesson')
