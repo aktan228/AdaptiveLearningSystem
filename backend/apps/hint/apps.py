@@ -2,4 +2,4 @@ from django.apps import AppConfig
 
 
 class HintConfig(AppConfig):
-    name = 'hint'
+    name = 'apps.hint'

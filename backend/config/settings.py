@@ -28,7 +28,7 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.courses',
     'apps.evaluation',
-    'apps.hints',
+    'apps.hint',
     'apps.progress',
 
 ]
