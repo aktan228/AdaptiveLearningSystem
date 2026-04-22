@@ -1,5 +1,7 @@
-from django.contrib.auth.models import AbstractBaseUser,BaseUserManager,PermissionsMixin
-from django.db import models
+from django.contrib.auth.models import AbstractBaseUser,BaseUserManager,PermissionsMixin # эти классы нужны для того чтобы создать свою кастомную модель пользователя
+#тк дефолтная модель пользователя в джанго не всегда подходит для всех проектов, а эти классы дают нам возможность создать свою модель с нужными полями и функционалом
+from django.db import models # это нужно для создания моделей в джанго, модели это классы которые описывают структуру данных и поведение объектов в нашей базе данных.
+#модели являются основой для работы с данными в джанго, они позволяют нам создавать, читать, обновлять и удалять данные в базе данных с помощью удобного интерфейса. модели также позволяют нам определять связи между различными типами данных, что делает работу с базой данных более эффективной и удобной. модели в джанго обычно создаются в файле models.py внутри каждого приложения.
 
 class UserManager(BaseUserManager):
     def create_user(self, email, username, password=None, **extra):
@@ -29,8 +31,6 @@ class User(AbstractBaseUser,PermissionsMixin):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-
 
     objects = UserManager()
 
@@ -66,18 +66,16 @@ class User(AbstractBaseUser,PermissionsMixin):
     
 
 class UserProfile(models.Model):
-
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     display_name = models.CharField(max_length=100, blank=True)
     avatar_url = models.URLField(blank=True, null=True)
     bio = models.TextField(blank=True,null=True)
-    threshold_easy = models.FloatField(default=0.4)
-    threshold_hard = models.FloatField(default=0.8)
+    threshold_easy = models.FloatField(default=0.4) # это поле для хранения порога легкой сложности задач, ниже которого задачи считаются легкими для данного пользователя. по умолчанию 0.4, что означает что задачи с оценкой сложности ниже 0.4 будут считаться легкими для этого пользователя.
+    threshold_hard = models.FloatField(default=0.8) # это поле для хранения порога высокой сложности задач, выше которого задачи считаются сложными для данного пользователя. по умолчанию 0.8, что означает что задачи с оценкой сложности выше 0.8 будут считаться сложными для этого пользователя. задачи с оценкой сложности между threshold_easy и threshold_hard будут считаться средними для этого пользователя.
 
     is_premium  = models.BooleanField(default=False)
     premium_until = models.DateTimeField(null=True, blank=True,)
     privacy_settings = models.JSONField(default=dict,blank=True) # это поле необходимости моего профиля # default=True при создание профиля создаст в этом поле пустой словарь {} что поможет избежать ошибок
-    # JSONField как ни странно хранит в себе json формата файл что очень полезно для настроек приватности которые постоянно меняются (что помогает не делать постоянно миграции)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
