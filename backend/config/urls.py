@@ -12,7 +12,7 @@ urlpatterns = [
     path('api/auth/refresh/', TokenRefreshView.as_view()), # для получения нового access токена при истечении срока действия старого, используя refresh токен
     # App APIs
     path('api/users/', include('apps.users.urls')), 
-    # path('api/courses/', include('apps.courses.urls')),
+    path('api/courses/', include('apps.courses.urls')),
     # path('api/evaluation/', include('apps.evaluation.urls')),
     # path('api/hints/', include('apps.hints.urls')),
     # path('api/progress/', include('apps.progress.urls')),
