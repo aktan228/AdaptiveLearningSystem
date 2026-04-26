@@ -32,7 +32,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     display_name = serializers.CharField(source='profile.display_name',read_only=True)
     avatar_url = serializers.URLField(source='profile.avatar_url',read_only=True)
-    full_name = serializers.CharField(source='full_name', read_only=True)
+    full_name = serializers.CharField(read_only=True)
     class Meta:
         model = User  
         fields = ["id", "email", "username", "role", "full_name", "display_name", "avatar_url", "created_at"]
