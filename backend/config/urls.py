@@ -14,6 +14,6 @@ urlpatterns = [
     path('api/users/', include('apps.users.urls')), 
     path('api/courses/', include('apps.courses.urls')),
     path('api/evaluation/', include('apps.evaluation.urls')),
-    # path('api/hints/', include('apps.hints.urls')),
-    # path('api/progress/', include('apps.progress.urls')),
+    path('api/hint/', include('apps.hint.urls')),
+    path('api/progress/', include('apps.progress.urls')),
 ]
