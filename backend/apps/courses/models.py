@@ -1,7 +1,7 @@
 from django.db import models
 from django_summernote.fields import SummernoteTextField
 
-class Tags(models.Model):
+class Tag(models.Model):
     title = models.CharField(max_length=50,unique=True)
     
     def __str__(self):
@@ -12,7 +12,7 @@ class Module(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     order = models.PositiveIntegerField(default=0)
-    tags = models.ManyToManyField(Tags,related_name='modules',blank=True)
+    tags = models.ManyToManyField(Tag,related_name='modules',blank=True)
     class Meta:
         ordering = ['order']
 
@@ -20,7 +20,7 @@ class Module(models.Model):
         return self.title
     
 class Lesson(models.Model):
-    module = models.ForeignKey(Module, related_name='lesson', on_delete=models.CASCADE)
+    module = models.ForeignKey(Module, related_name='lessons', on_delete=models.CASCADE)
 
     title = models.CharField(max_length=100)
     content_html = SummernoteTextField() #rich text via Summernote
@@ -38,12 +38,12 @@ class Lesson(models.Model):
 class Task(models.Model):
     DIFFICULTY = [('easy','Easy'), ('medium','Medium'),('hard','Hard')]
 
-    lesson = models.ForeignKey(Lesson,on_delete=models.CASCADE, related_name='task')
+    lesson = models.ForeignKey(Lesson,on_delete=models.CASCADE, related_name='tasks')
 
     title = models.CharField(max_length=100)
     description = models.TextField()
     difficulty_level = models.CharField(max_length=10,choices=DIFFICULTY,default='easy')
-    time_limit_seconds = models.PositiveIntegerField(default=10)
+    time_limit_seconds = models.PositiveIntegerField(default=300) #5 minutes default
 
     class Meta:
         constraints = [

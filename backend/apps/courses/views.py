@@ -1,8 +1,8 @@
 from rest_framework import generics
 from rest_framework.permissions import AllowAny
 
-from .serializers import ModuleListSerializer,LessonDetailSerializer,ModuleDetailSerializer
-from .models import Module,Lesson
+from .models import Lesson, Module
+from .serializers import LessonDetailSerializer, ModuleDetailSerializer, ModuleListSerializer
 
 class ModuleListView(generics.ListAPIView):
     queryset = Module.objects.all()
@@ -14,7 +14,7 @@ class ModuleDetailView(generics.RetrieveAPIView):
     serializer_class = ModuleDetailSerializer
     permission_classes = [AllowAny]
 
-class LessonDetailView(generics.ListAPIView):
+class LessonDetailView(generics.RetrieveAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonDetailSerializer
     permission_classes = [AllowAny]
