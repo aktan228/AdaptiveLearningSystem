@@ -2,21 +2,45 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+const inputStyle = (hasError) => ({
+  width: '100%',
+  padding: '12px',
+  backgroundColor: 'var(--bg-tertiary)',
+  border: `1px solid ${hasError ? 'var(--accent-red)' : 'var(--border-color)'}`,
+  borderRadius: 'var(--radius-md)',
+  color: 'var(--text-primary)',
+  fontSize: '16px',
+});
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const clearFieldError = (fieldName) => {
+    setFieldErrors((prev) => ({ ...prev, [fieldName]: '' }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (login(email, password)) {
+    setFieldErrors({});
+
+    setIsSubmitting(true);
+    const result = await login(email, password);
+    setIsSubmitting(false);
+
+    if (result.success) {
       navigate('/modules');
-    } else {
-      setError('Invalid credentials');
+      return;
     }
+
+    setError(result.error || 'Invalid credentials');
+    setFieldErrors(result.fieldErrors || {});
   };
 
   return (
@@ -59,17 +83,12 @@ export default function LoginPage() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '12px',
-                backgroundColor: 'var(--bg-tertiary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)',
-                color: 'var(--text-primary)',
-                fontSize: '16px',
+              onChange={(e) => {
+                setEmail(e.target.value);
+                clearFieldError('email');
               }}
+              required
+              style={inputStyle(Boolean(fieldErrors.email))}
               placeholder="your@email.com"
             />
           </div>
@@ -86,18 +105,13 @@ export default function LoginPage() {
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '12px',
-                backgroundColor: 'var(--bg-tertiary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)',
-                color: 'var(--text-primary)',
-                fontSize: '16px',
+              onChange={(e) => {
+                setPassword(e.target.value);
+                clearFieldError('password');
               }}
-              placeholder="••••••••"
+              required
+              style={inputStyle(Boolean(fieldErrors.password))}
+              placeholder="********"
             />
           </div>
 
@@ -114,6 +128,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
+            disabled={isSubmitting}
             style={{
               width: '100%',
               padding: '12px',
@@ -123,11 +138,12 @@ export default function LoginPage() {
               borderRadius: 'var(--radius-md)',
               fontSize: '16px',
               fontWeight: 'bold',
-              cursor: 'pointer',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              opacity: isSubmitting ? 0.7 : 1,
               marginBottom: '20px',
             }}
           >
-            Login
+            {isSubmitting ? 'Logging in...' : 'Login'}
           </button>
         </form>
 

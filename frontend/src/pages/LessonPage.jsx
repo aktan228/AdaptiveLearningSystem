@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { mockLessons, mockLessonContent } from '../mock/lessons';
-import { mockModules } from '../mock/modules';
-import { mockTasks } from '../mock/tasks';
 import DifficultyBadge from '../components/DifficultyBadge';
 import { useAuth } from '../context/AuthContext';
+import api from '../lib/api';
 
 const difficultyConfig = {
   easy: {
@@ -23,6 +21,47 @@ const difficultyConfig = {
     accent: 'var(--accent-red)',
   },
 };
+
+function renderTaskPreview(description) {
+  if (!description) {
+    return null;
+  }
+
+  return description
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line, index) => {
+      if (line.startsWith('**') && line.endsWith('**')) {
+        return (
+          <div
+            key={`${line}-${index}`}
+            style={{
+              color: 'var(--text-primary)',
+              fontWeight: 'bold',
+              marginTop: index === 0 ? 0 : '12px',
+              marginBottom: '6px',
+            }}
+          >
+            {line.replace(/\*\*/g, '')}
+          </div>
+        );
+      }
+
+      return (
+        <div
+          key={`${line}-${index}`}
+          style={{
+            color: 'var(--text-secondary)',
+            lineHeight: '1.6',
+            marginBottom: '6px',
+          }}
+        >
+          {line}
+        </div>
+      );
+    });
+}
 
 function getFallbackContent(lesson) {
   return {
@@ -48,25 +87,123 @@ export default function LessonPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const lessonId = parseInt(id);
-
-  const lesson = mockLessons.find((item) => item.id === lessonId);
-  const module = lesson ? mockModules.find((item) => item.id === lesson.module_id) : null;
-  const content = lesson ? (mockLessonContent[lessonId] || getFallbackContent(lesson)) : null;
-  const lessonTasks = mockTasks.filter((task) => task.lesson_id === lessonId);
-  const [selectedDifficulty, setSelectedDifficulty] = useState(lessonTasks[0]?.difficulty_level || null);
+  const [lesson, setLesson] = useState(null);
+  const [module, setModule] = useState(null);
+  const [content, setContent] = useState(null);
+  const [lessonTasks, setLessonTasks] = useState([]);
+  const [moduleLessons, setModuleLessons] = useState([]);
+  const [selectedDifficulty, setSelectedDifficulty] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMarkingComplete, setIsMarkingComplete] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    setSelectedDifficulty(lessonTasks[0]?.difficulty_level || null);
-  }, [lessonId]);
+    let isMounted = true;
+
+    const fetchLesson = async () => {
+      setIsLoading(true);
+      setError('');
+
+      try {
+        const lessonResponse = await api.get(`/api/courses/lessons/${lessonId}/`);
+        const lessonData = lessonResponse.data;
+        const moduleResponse = await api.get(`/api/courses/modules/${lessonData.module}/`);
+        const moduleData = moduleResponse.data;
+
+        let completedLessonIds = new Set();
+        let solvedTaskIds = new Set();
+        if (user) {
+          try {
+            const [progressResponse, taskProgressResponse] = await Promise.all([
+              api.get('/api/progress/lessons/'),
+              api.get('/api/progress/tasks/'),
+            ]);
+            completedLessonIds = new Set(
+              progressResponse.data
+                .filter((item) => item.is_completed)
+                .map((item) => item.lesson),
+            );
+            solvedTaskIds = new Set(
+              taskProgressResponse.data
+                .filter((item) => item.is_solved)
+                .map((item) => item.task),
+            );
+          } catch {
+            completedLessonIds = new Set();
+            solvedTaskIds = new Set();
+          }
+        }
+
+        const normalizedLesson = {
+          id: lessonData.id,
+          module_id: lessonData.module,
+          title: lessonData.title,
+          order: lessonData.order,
+          is_completed: completedLessonIds.has(lessonData.id),
+        };
+        const normalizedModule = {
+          id: moduleData.id,
+          title: moduleData.title,
+          description: moduleData.description,
+        };
+        const normalizedTasks = (lessonData.tasks ?? []).map((task) => ({
+          ...task,
+          lesson_id: lessonData.id,
+          time_limit: task.time_limit_seconds,
+          tags: task.tags ?? [],
+          is_solved: solvedTaskIds.has(task.id),
+        }));
+        const normalizedModuleLessons = (moduleData.lessons ?? [])
+          .sort((a, b) => a.order - b.order)
+          .map((item) => ({
+            ...item,
+            module_id: moduleData.id,
+            is_completed: completedLessonIds.has(item.id),
+          }));
+
+        if (isMounted) {
+          setLesson(normalizedLesson);
+          setModule(normalizedModule);
+          setContent({
+            id: lessonData.id,
+            title: lessonData.title,
+            content_html: lessonData.content_html,
+          });
+          setLessonTasks(normalizedTasks);
+          setModuleLessons(normalizedModuleLessons);
+          setSelectedDifficulty(normalizedTasks[0]?.difficulty_level || null);
+        }
+      } catch {
+        if (isMounted) {
+          setError('Failed to load lesson.');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchLesson();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [lessonId, user]);
+
+  if (isLoading) {
+    return <div style={{ padding: '20px', color: 'var(--text-secondary)' }}>Loading lesson...</div>;
+  }
+
+  if (error) {
+    return <div style={{ padding: '20px', color: 'var(--accent-red)' }}>{error}</div>;
+  }
 
   if (!lesson || !content || !module) {
-    return <div>Lesson not found</div>;
+    return <div style={{ padding: '20px', color: 'var(--text-secondary)' }}>Lesson not found</div>;
   }
 
   const selectedTask = lessonTasks.find((task) => task.difficulty_level === selectedDifficulty);
-  const moduleLessons = mockLessons
-    .filter((item) => item.module_id === module.id)
-    .sort((a, b) => a.order - b.order);
   const currentLessonIndex = moduleLessons.findIndex((item) => item.id === lesson.id);
   const nextLesson = moduleLessons[currentLessonIndex + 1];
 
@@ -77,7 +214,26 @@ export default function LessonPage() {
   };
 
   const handleMarkComplete = () => {
-    console.log('Marked as complete');
+    if (!user || !lesson) {
+      navigate('/login');
+      return;
+    }
+
+    setIsMarkingComplete(true);
+    api
+      .post(`/api/progress/lessons/${lesson.id}/complete/`)
+      .then(() => {
+        setLesson((prev) => (prev ? { ...prev, is_completed: true } : prev));
+        setModuleLessons((prev) =>
+          prev.map((item) => (item.id === lesson.id ? { ...item, is_completed: true } : item)),
+        );
+      })
+      .catch(() => {
+        setError('Failed to mark lesson as complete.');
+      })
+      .finally(() => {
+        setIsMarkingComplete(false);
+      });
   };
 
   return (
@@ -210,8 +366,13 @@ export default function LessonPage() {
                       {config.description}
                     </div>
                     <div style={{ color: 'var(--text-secondary)', fontSize: '12px', marginTop: '10px' }}>
-                      {Math.round(task.time_limit / 60)} min
+                      {Math.round((task.time_limit ?? 0) / 60)} min
                     </div>
+                    {task.is_solved && (
+                      <div style={{ color: 'var(--accent-green)', fontSize: '12px', marginTop: '8px', fontWeight: 'bold' }}>
+                        Solved
+                      </div>
+                    )}
                   </button>
                 );
               })}
@@ -225,11 +386,22 @@ export default function LessonPage() {
                 <div style={{ color: 'var(--text-primary)', fontWeight: 'bold', marginBottom: '6px' }}>
                   Selected task
                 </div>
-                <div style={{ color: 'var(--text-secondary)', marginBottom: '14px' }}>
+                <div style={{ color: 'var(--text-primary)', fontWeight: 'bold', marginBottom: '10px' }}>
                   {selectedTask.title}
                 </div>
+                <div
+                  style={{
+                    backgroundColor: 'var(--bg-primary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '14px',
+                    marginBottom: '14px',
+                  }}
+                >
+                  {renderTaskPreview(selectedTask.description)}
+                </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {selectedTask.tags.map((tag) => (
+                  {(selectedTask.tags ?? []).map((tag) => (
                     <span
                       key={tag}
                       style={{
@@ -273,6 +445,7 @@ export default function LessonPage() {
         </button>
         <button
           onClick={handleMarkComplete}
+          disabled={isMarkingComplete}
           style={{
             padding: '12px 24px',
             backgroundColor: 'var(--bg-tertiary)',
@@ -280,10 +453,11 @@ export default function LessonPage() {
             border: '1px solid var(--border-color)',
             borderRadius: 'var(--radius-md)',
             fontSize: '16px',
-            cursor: 'pointer',
+            cursor: isMarkingComplete ? 'not-allowed' : 'pointer',
+            opacity: isMarkingComplete ? 0.7 : 1,
           }}
         >
-          Mark as Complete
+          {lesson.is_completed ? 'Completed' : isMarkingComplete ? 'Saving...' : 'Mark as Complete'}
         </button>
         {nextLesson && (
           <button

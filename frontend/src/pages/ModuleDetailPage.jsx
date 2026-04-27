@@ -1,36 +1,139 @@
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { mockModules } from '../mock/modules';
-import { mockLessons } from '../mock/lessons';
-import { mockTasks } from '../mock/tasks';
 import DifficultyBadge from '../components/DifficultyBadge';
+import { useAuth } from '../context/AuthContext';
+import api from '../lib/api';
 
 export default function ModuleDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const moduleId = parseInt(id);
+  const [module, setModule] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const module = mockModules.find((item) => item.id === moduleId);
+  useEffect(() => {
+    let isMounted = true;
 
-  if (!module) {
-    return <div>Module not found</div>;
+    const fetchModule = async () => {
+      setIsLoading(true);
+      setError('');
+
+      try {
+        const moduleResponse = await api.get(`/api/courses/modules/${moduleId}/`);
+        const moduleData = moduleResponse.data;
+        let completedLessonIds = new Set();
+        let solvedTaskIds = new Set();
+
+        if (user) {
+          try {
+            const [progressResponse, taskProgressResponse] = await Promise.all([
+              api.get('/api/progress/lessons/'),
+              api.get('/api/progress/tasks/'),
+            ]);
+            completedLessonIds = new Set(
+              progressResponse.data
+                .filter((item) => item.is_completed)
+                .map((item) => item.lesson),
+            );
+            solvedTaskIds = new Set(
+              taskProgressResponse.data
+                .filter((item) => item.is_solved)
+                .map((item) => item.task),
+            );
+          } catch {
+            completedLessonIds = new Set();
+            solvedTaskIds = new Set();
+          }
+        }
+
+        const normalizedLessons = (moduleData.lessons ?? [])
+          .sort((a, b) => a.order - b.order)
+          .map((lesson, index, arr) => {
+            const previousLesson = arr[index - 1];
+            const isCompleted = completedLessonIds.has(lesson.id);
+            const isLocked = Boolean(user && previousLesson && !completedLessonIds.has(previousLesson.id));
+
+            return {
+              ...lesson,
+              is_completed: isCompleted,
+              isLocked,
+              difficulties: [],
+            };
+          });
+
+        const lessonDetails = await Promise.all(
+          normalizedLessons.map((lesson) => api.get(`/api/courses/lessons/${lesson.id}/`)),
+        );
+
+        const difficultyMap = new Map(
+          lessonDetails.map((response) => [
+            response.data.id,
+            (response.data.tasks ?? []).map((task) => task.difficulty_level),
+          ]),
+        );
+        const taskCountMap = new Map(
+          lessonDetails.map((response) => [
+            response.data.id,
+            (response.data.tasks ?? []).length,
+          ]),
+        );
+        const solvedTaskCountMap = new Map(
+          lessonDetails.map((response) => [
+            response.data.id,
+            (response.data.tasks ?? []).filter((task) => solvedTaskIds.has(task.id)).length,
+          ]),
+        );
+
+        if (isMounted) {
+          setModule({
+            ...moduleData,
+            focus: (moduleData.tags ?? []).map((tag) => tag.title),
+            lessonsCount: normalizedLessons.length,
+            completedLessons: normalizedLessons.filter((lesson) => lesson.is_completed).length,
+            totalTasks: lessonDetails.reduce((sum, response) => sum + (response.data.tasks ?? []).length, 0),
+            solvedTasks: lessonDetails.reduce(
+              (sum, response) => sum + (response.data.tasks ?? []).filter((task) => solvedTaskIds.has(task.id)).length,
+              0,
+            ),
+            lessons: normalizedLessons.map((lesson) => ({
+              ...lesson,
+              difficulties: difficultyMap.get(lesson.id) ?? [],
+              totalTaskCount: taskCountMap.get(lesson.id) ?? 0,
+              solvedTaskCount: solvedTaskCountMap.get(lesson.id) ?? 0,
+            })),
+          });
+        }
+      } catch {
+        if (isMounted) {
+          setError('Failed to load module.');
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchModule();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [moduleId, user]);
+
+  if (isLoading) {
+    return <div style={{ padding: '20px', color: 'var(--text-secondary)' }}>Loading module...</div>;
   }
 
-  const lessons = mockLessons
-    .filter((lesson) => lesson.module_id === moduleId)
-    .sort((a, b) => a.order - b.order)
-    .map((lesson, index, arr) => {
-      const previousLesson = arr[index - 1];
-      const isLocked = Boolean(previousLesson && !previousLesson.is_completed);
-      const difficulties = mockTasks
-        .filter((task) => task.lesson_id === lesson.id)
-        .map((task) => task.difficulty_level);
+  if (error) {
+    return <div style={{ padding: '20px', color: 'var(--accent-red)' }}>{error}</div>;
+  }
 
-      return {
-        ...lesson,
-        isLocked,
-        difficulties,
-      };
-    });
+  if (!module) {
+    return <div style={{ padding: '20px', color: 'var(--text-secondary)' }}>Module not found</div>;
+  }
 
   return (
     <div style={{
@@ -74,7 +177,7 @@ export default function ModuleDetailPage() {
               {module.description}
             </p>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {module.focus.map((item) => (
+              {(module.focus ?? []).map((item) => (
                 <span
                   key={item}
                   style={{
@@ -127,7 +230,7 @@ export default function ModuleDetailPage() {
         display: 'grid',
         gap: '14px',
       }}>
-        {lessons.map((lesson) => (
+        {(module.lessons ?? []).map((lesson) => (
           <div
             key={lesson.id}
             style={{
@@ -163,7 +266,9 @@ export default function ModuleDetailPage() {
                   {lesson.title}
                 </div>
                 <div style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '10px' }}>
-                  {lesson.is_completed ? 'Completed theory' : 'Open lesson and choose a practice difficulty.'}
+                  {lesson.is_completed
+                    ? 'Lesson marked as completed.'
+                    : `${lesson.solvedTaskCount ?? 0}/${lesson.totalTaskCount ?? 0} tasks solved so far.`}
                 </div>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {lesson.difficulties.length > 0 ? (

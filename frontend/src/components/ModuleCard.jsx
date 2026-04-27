@@ -3,6 +3,19 @@ import ProgressBar from "./ProgressBar";
 
 export default function ModuleCard({ module, isLocked }) {
   const navigate = useNavigate();
+  const focusItems = module.focus ?? [];
+  const lessonsCount = module.lessonsCount ?? 0;
+  const completedLessons = module.completedLessons ?? 0;
+  const totalTasks = module.totalTasks ?? 0;
+  const solvedTasks = module.solvedTasks ?? 0;
+  const progressValue = totalTasks > 0 ? solvedTasks : completedLessons;
+  const progressMax = totalTasks > 0 ? totalTasks : lessonsCount || 1;
+  const progressLabel =
+    totalTasks > 0
+      ? `${solvedTasks}/${totalTasks} tasks solved`
+      : `${completedLessons}/${lessonsCount} lessons`;
+  const isModuleCompleted =
+    totalTasks > 0 ? solvedTasks === totalTasks && totalTasks > 0 : lessonsCount > 0 && completedLessons === lessonsCount;
 
   const handleClick = () => {
     if (!isLocked) {
@@ -52,7 +65,7 @@ export default function ModuleCard({ module, isLocked }) {
           🔒
         </div>
       )}
-      {module.completedLessons === module.lessonsCount && (
+      {isModuleCompleted && (
         <div
           style={{
             position: "absolute",
@@ -79,7 +92,7 @@ export default function ModuleCard({ module, isLocked }) {
           marginBottom: "18px",
         }}
       >
-        {module.focus.map((item) => (
+        {focusItems.map((item) => (
           <span
             key={item}
             style={{
@@ -94,11 +107,7 @@ export default function ModuleCard({ module, isLocked }) {
           </span>
         ))}
       </div>
-      <ProgressBar
-        value={module.completedLessons}
-        max={module.lessonsCount}
-        label={`${module.completedLessons}/${module.lessonsCount} lessons`}
-      />
+      <ProgressBar value={progressValue} max={progressMax} label={progressLabel} />
       <button
         style={{
           width: "100%",
@@ -114,7 +123,7 @@ export default function ModuleCard({ module, isLocked }) {
         }}
         disabled={isLocked}
       >
-        {module.completedLessons === 0 ? "Open module" : "Continue module"}
+        {progressValue === 0 ? "Open module" : "Continue module"}
       </button>
     </div>
   );

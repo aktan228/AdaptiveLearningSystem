@@ -2,29 +2,59 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+const inputStyle = (hasError) => ({
+  width: '100%',
+  padding: '12px',
+  backgroundColor: 'var(--bg-tertiary)',
+  border: `1px solid ${hasError ? 'var(--accent-red)' : 'var(--border-color)'}`,
+  borderRadius: 'var(--radius-md)',
+  color: 'var(--text-primary)',
+  fontSize: '16px',
+});
+
+const fieldErrorStyle = {
+  color: 'var(--accent-red)',
+  fontSize: '13px',
+  marginTop: '6px',
+};
+
 export default function RegisterPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const clearFieldError = (fieldName) => {
+    setFieldErrors((prev) => ({ ...prev, [fieldName]: '' }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setFieldErrors({});
 
     if (password !== confirmPassword) {
       setError('Passwords do not match');
+      setFieldErrors({ confirmPassword: 'Passwords do not match' });
       return;
     }
 
-    if (register(username, email, password)) {
+    setIsSubmitting(true);
+    const result = await register(username, email, password);
+    setIsSubmitting(false);
+
+    if (result.success) {
       navigate('/modules');
-    } else {
-      setError('Registration failed');
+      return;
     }
+
+    setError(result.error || 'Registration failed');
+    setFieldErrors(result.fieldErrors || {});
   };
 
   return (
@@ -67,19 +97,15 @@ export default function RegisterPage() {
             <input
               type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '12px',
-                backgroundColor: 'var(--bg-tertiary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)',
-                color: 'var(--text-primary)',
-                fontSize: '16px',
+              onChange={(e) => {
+                setUsername(e.target.value);
+                clearFieldError('username');
               }}
+              required
+              style={inputStyle(Boolean(fieldErrors.username))}
               placeholder="yourusername"
             />
+            {fieldErrors.username && <div style={fieldErrorStyle}>{fieldErrors.username}</div>}
           </div>
 
           <div style={{ marginBottom: '20px' }}>
@@ -94,19 +120,15 @@ export default function RegisterPage() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '12px',
-                backgroundColor: 'var(--bg-tertiary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)',
-                color: 'var(--text-primary)',
-                fontSize: '16px',
+              onChange={(e) => {
+                setEmail(e.target.value);
+                clearFieldError('email');
               }}
+              required
+              style={inputStyle(Boolean(fieldErrors.email))}
               placeholder="your@email.com"
             />
+            {fieldErrors.email && <div style={fieldErrorStyle}>{fieldErrors.email}</div>}
           </div>
 
           <div style={{ marginBottom: '20px' }}>
@@ -121,19 +143,16 @@ export default function RegisterPage() {
             <input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '12px',
-                backgroundColor: 'var(--bg-tertiary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)',
-                color: 'var(--text-primary)',
-                fontSize: '16px',
+              onChange={(e) => {
+                setPassword(e.target.value);
+                clearFieldError('password');
+                clearFieldError('confirmPassword');
               }}
-              placeholder="••••••••"
+              required
+              style={inputStyle(Boolean(fieldErrors.password))}
+              placeholder="********"
             />
+            {fieldErrors.password && <div style={fieldErrorStyle}>{fieldErrors.password}</div>}
           </div>
 
           <div style={{ marginBottom: '20px' }}>
@@ -148,19 +167,15 @@ export default function RegisterPage() {
             <input
               type="password"
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              style={{
-                width: '100%',
-                padding: '12px',
-                backgroundColor: 'var(--bg-tertiary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 'var(--radius-md)',
-                color: 'var(--text-primary)',
-                fontSize: '16px',
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                clearFieldError('confirmPassword');
               }}
-              placeholder="••••••••"
+              required
+              style={inputStyle(Boolean(fieldErrors.confirmPassword))}
+              placeholder="********"
             />
+            {fieldErrors.confirmPassword && <div style={fieldErrorStyle}>{fieldErrors.confirmPassword}</div>}
           </div>
 
           {error && (
@@ -176,6 +191,7 @@ export default function RegisterPage() {
 
           <button
             type="submit"
+            disabled={isSubmitting}
             style={{
               width: '100%',
               padding: '12px',
@@ -185,11 +201,12 @@ export default function RegisterPage() {
               borderRadius: 'var(--radius-md)',
               fontSize: '16px',
               fontWeight: 'bold',
-              cursor: 'pointer',
+              cursor: isSubmitting ? 'not-allowed' : 'pointer',
+              opacity: isSubmitting ? 0.7 : 1,
               marginBottom: '20px',
             }}
           >
-            Register
+            {isSubmitting ? 'Creating account...' : 'Register'}
           </button>
         </form>
 
