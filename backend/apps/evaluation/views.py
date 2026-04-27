@@ -1,33 +1,66 @@
-from rest_framework import generics,permissions
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
 
-from .serializers import SubmissionCreateSerializer, SubmissionListSerializer, SubmissionSerializer
 from .models import Submission
+from .serializers import (
+    RunCodeResultSerializer,
+    RunCodeSerializer,
+    SubmissionCreateSerializer,
+    SubmissionListSerializer,
+    SubmissionSerializer,
+)
+from .services import create_and_evaluate_submission, evaluate_code_preview
+
 
 class SubmissionListView(generics.ListAPIView):
     serializer_class = SubmissionListSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
-    def get_queryset(self): # используется когда нужно предоставить данные с некоторыми услованиям это невозможно если использовать аттрибу queryset=submission.objects.all() тк чтобы написать условие нужно писать self.request а это невозможно при атрибуте класса
-        return Submission.objects.filter(user=self.request.user).order_by('-submitted_at')
+
+    def get_queryset(self):
+        return Submission.objects.filter(user=self.request.user).select_related("task").order_by("-submitted_at")
+
+
 class SubmissionCreateView(generics.CreateAPIView):
     queryset = Submission.objects.all()
     serializer_class = SubmissionCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
-    def perform_create(self,serializer):
-        task = serializer.validated_data['task']
-        serializer.save(
-            user=self.request.user,
-            status='pending',
-            difficulty_at_submission = task.difficulty_level
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        submission = create_and_evaluate_submission(
+            user=request.user,
+            task=serializer.validated_data["task"],
+            code=serializer.validated_data["code"],
+            hints_used=serializer.validated_data.get("hints_used", 0),
+            time_spent=serializer.validated_data.get("time_spent", 0),
         )
-    
+
+        output_serializer = SubmissionSerializer(submission)
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class RunCodeView(generics.GenericAPIView):
+    serializer_class = RunCodeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        result = evaluate_code_preview(
+            task=serializer.validated_data["task"],
+            code=serializer.validated_data["code"],
+        )
+
+        output_serializer = RunCodeResultSerializer(result)
+        return Response(output_serializer.data, status=status.HTTP_200_OK)
+
+
 class SubmissionDetailView(generics.RetrieveAPIView):
     serializer_class = SubmissionSerializer
     permission_classes = [permissions.IsAuthenticated]
-    # queryset это все объекты модели Submission, а serializer_class - это класс сериализатора, который будет использоваться для преобразования объектов Submission в формат JSON и обратно.
-    # queryset это что то готового sql запроса который основывается на моей модели и данных в ней и запустится только при каком нибудь действии на сервер например  user отправит запрос на отправку submission и в этот момент мы обратимся к базе
+
     def get_queryset(self):
-        return Submission.objects.filter(user=self.request.user) # filter = where из sql 
-    # Python: Submission.objects.filter(status="pending")
-    # SQL: SELECT * FROM submissions WHERE status = 'pending';  
+        return Submission.objects.filter(user=self.request.user)

@@ -52,3 +52,15 @@ class DashboardSerializer(serializers.Serializer):
     completed_lessons = serializers.IntegerField()
     total_tasks = serializers.IntegerField()
     solved_tasks = serializers.IntegerField()
+    total_easy_tasks = serializers.IntegerField()
+    total_medium_tasks = serializers.IntegerField()
+    total_hard_tasks = serializers.IntegerField()
+    solved_easy_tasks = serializers.IntegerField()
+    solved_medium_tasks = serializers.IntegerField()
+    solved_hard_tasks = serializers.IntegerField()
+    active_days = serializers.IntegerField()
+    current_streak = serializers.IntegerField()
+    max_streak = serializers.IntegerField()
+    recent_submissions = serializers.ListField(
+        child=serializers.DictField(),
+    )

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Tag, Module, Lesson, Task
+from .models import Lesson, Module, Tag, Task
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -13,6 +13,12 @@ class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
         fields = ["id", "title", "description", "difficulty_level", "time_limit_seconds"]
+
+
+class TaskDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ["id", "lesson", "title", "description", "difficulty_level", "time_limit_seconds"]
 
 
 class LessonListSerializer(serializers.ModelSerializer):

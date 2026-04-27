@@ -11,7 +11,7 @@ def env_flag(name: str, default: bool) -> bool: # ищет .env и возвра�
 BASE_DIR = Path(__file__).resolve().parent.parent # basedir нужен 
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-dev-only-change-me')
 DEBUG = env_flag('DEBUG', True)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -35,7 +35,12 @@ INSTALLED_APPS = [
 ]
 AUTH_USER_MODEL = 'users.User'
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',   # React frontend
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'http://localhost:4173',
+    'http://127.0.0.1:4173',
 ]
 
 MIDDLEWARE = [

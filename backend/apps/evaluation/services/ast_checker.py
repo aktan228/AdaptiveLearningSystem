@@ -13,6 +13,7 @@ CONSTRUCT_CHECKERS = {
     "set_comp": lambda tree: any(isinstance(node, ast.SetComp) for node in ast.walk(tree)),
     "generator_exp": lambda tree: any(isinstance(node, ast.GeneratorExp) for node in ast.walk(tree)),
     "recursion": lambda tree: _has_recursion(tree),
+    "nested_loop": lambda tree: _has_nested_loop(tree),
 }
 
 
@@ -24,6 +25,19 @@ def _has_recursion(tree):
         for inner_node in ast.walk(function):
             if isinstance(inner_node, ast.Call) and isinstance(inner_node.func, ast.Name):
                 if inner_node.func.id == function_name:
+                    return True
+    return False
+
+
+def _has_nested_loop(tree):
+    loop_nodes = (ast.For, ast.While)
+
+    for node in ast.walk(tree):
+        if isinstance(node, loop_nodes):
+            for inner_node in ast.walk(node):
+                if inner_node is node:
+                    continue
+                if isinstance(inner_node, loop_nodes):
                     return True
     return False
 
